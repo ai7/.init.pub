@@ -1,0 +1,212 @@
+# ~/.zshrc: only run for interactive shells
+#
+# General helpful zsh setting that should work everywhere.
+#
+# we start with history config so subshell that finishes zshrc early won't
+# shorten our history file due to default HIST options.
+
+# ----- history related configuration -----
+
+# setopt SHARE_HISTORY           # shares history across all open sessions in realtime
+setopt APPEND_HISTORY          # Append to HISTFILE on exit (don't overwrite)
+setopt HIST_IGNORE_ALL_DUPS    # similar to bash erasedups
+setopt HIST_IGNORE_SPACE       # don't save cmd begin with space
+setopt HIST_REDUCE_BLANKS      # removes extra spaces from cmd before saving
+setopt HIST_EXPIRE_DUPS_FIRST  # delete dups first on history limit reach
+setopt HIST_SAVE_NO_DUPS       # don't write duplicate entries to history file
+setopt HIST_VERIFY
+
+export HISTFILE=~/.zsh_history # ensure history file is always created
+export HISTSIZE=16384
+export SAVEHIST=$(( HISTSIZE * 4 ))
+
+_zsh_ignore_list=(
+   'history'
+   'history *'   # ignore history with arguments
+   'ls'
+   'dir'
+   'cd'
+   'cd ..'
+   'cd [+-]*'    # ignore directory stack navigation (cd +N, cd -N)
+   'cls'
+   'clear'
+   '[bf]g'       # ignore background/foreground jobs
+   'exit'
+   'pwd'
+   'set'
+   'export'
+   'env'
+   'df'
+   'hs'
+   'hs *'        # ignore history search commands
+)
+
+# Join the array into a (pattern1|pattern2) string
+export HISTORY_IGNORE="(${(j:|:)_zsh_ignore_list})"
+unset _zsh_ignore_list
+
+# push directories on every cd, can use popd or cd -2, etc
+setopt AUTO_PUSHD
+
+# Don't push multiple copies of the same directory
+setopt PUSHD_IGNORE_DUPS
+
+# ----- keyboard bindings -----
+
+# up/down arrow searches through history
+bindkey '^[[A' history-beginning-search-backward  # up-arrow
+bindkey '^[[B' history-beginning-search-forward   # down-arrow
+
+bindkey '^[[3~' delete-char        # Delete
+bindkey '^[[H'  beginning-of-line  # Home (xterm)
+bindkey '^[[1~' beginning-of-line  # Home (vt220/linux)
+bindkey '^[[F'  end-of-line        # End (xterm)
+bindkey '^[[4~' end-of-line        # End (vt220/linux)
+
+# ----- skip full init for non-interactive/embedded shells -----
+
+[[ $TERM == dumb ]]    && return  # scp, rsync, TRAMP
+[[ -v MC_SID ]]        && return  # midnight commander subshell
+[[ -v INSIDE_EMACS ]]  && return  # emacs shell modes
+[[ -v VIM ]]           && return  # vim/nvim :shell
+
+# ----- os detect -----
+
+# must not have space around = when setting variables
+is_mac=false
+is_linux=false
+is_win=false
+
+case "$OSTYPE" in
+  darwin*)  is_mac=true ;;
+  linux*)   is_linux=true ;;
+  msys*)    is_win=true ;;
+  *)        echo "Unknown OS: $OSTYPE" ;;
+esac
+
+# set $is_zsh if running under zsh
+[ -n "$ZSH_VERSION" ] && is_zsh=true || is_zsh=false
+
+# ----- define useful functions here -----
+
+# Keep the path array unique (prevents duplicates automatically)
+typeset -aU path
+
+# add dir to end of path if exists. dup is handled already by above.
+path_add() {
+  [[ -d "$1" ]] && path+=("$1")
+}
+
+# add dir to beginning of path if exists
+path_prepend() {
+  [[ -d "$1" ]] && path=("$1" $path)
+}
+
+# define an alias if the target exists
+# $1 is the alias name, $2 is the target command/path
+alias2() {
+  if (( $+commands[$2] )) || [[ -x "$2" ]]; then
+    alias "$1"="$2"
+  fi
+}
+
+# ----- initial path setup -----
+
+# add initial [bin, sbin] x [/usr/local, usr/,  /] to path if exists
+path_add "/usr/local/bin"
+path_add "/usr/local/sbin"
+path_add "/usr/bin"
+path_add "/usr/sbin"
+path_add "/bin"
+path_add "/sbin"
+
+# ----- load aliases -----
+
+. ~/.init.pub/zsh/zsh_alias
+
+# ----- some platform specific stuff -----
+
+if $is_mac; then
+   # MacOS, also works for FreeBSD
+   # export CLICOLOR=1
+   export LSCOLORS=BxDxFxdxCxdxdxBxBxBxBx
+else
+   eval `dircolors ~/.init/bash/dir_colors`
+fi
+
+# ----- case insensitive completion
+
+# Enable the completion system
+autoload -Uz compinit && compinit
+
+# The "Smart Case" One-Liner
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
+
+# ----- prompt stuff
+
+autoload -Uz promptinit && promptinit
+
+# Replicates your MYPSDIR_AWK logic
+get_fancy_dir() {
+  # Get path with ~ for home
+  local p="${PWD/#$HOME/~}"
+  # Split into an array
+  local parts=("${(s:/:)p}")
+
+  # Your specific condition: length > 16 AND more than 4 parts
+  if [[ ${#p} -gt 16 && ${#parts} -gt 4 ]]; then
+    # Replicates: print $1,$2,".." NF-4 "..",$(NF-1),$NF
+    # Note: parts[1] is the first element in Zsh (1-based indexing)
+    echo "${parts[1]}/${parts[2]}/..$((${#parts}-4))../${parts[-2]}/${parts[-1]}"
+  else
+    echo "$p"
+  fi
+}
+
+# set a prompt similar to my bash version for now
+# %(?.success.failure): ternary expression
+# %F{10}: Bright Green.
+# %F{9}: Bright Red.
+# %?: exit status
+# %l: tty
+# %L: shell level
+# %h: history number
+setopt PROMPT_SUBST
+PROMPT='[%F{yellow}%B%h%b%f %(?.%F{10}.%F{9})%?%f %l/%L %B%n@%m%b $(get_fancy_dir)]%# '
+
+# ----- remaining customizations -----
+
+export PAGER='less -IMSR'
+
+# don't allow redirect to override existing file, override with >|
+set -C
+
+# ----- site specific customizations -----
+
+# load all zshrc_* files with execute permission
+for _rcf in ~/.init.pub/zsh/zshrc_*(N*); do
+ . $_rcf
+done
+unset _rcf
+
+# ----- final path settings -----
+
+# set PATH so it includes user's private bin if it exists
+# include our bin at the end to reduce security risk
+path_add "$HOME/bin"
+path_add "$HOME/.local/bin"
+
+# finally add mac-port and brew directories to path
+# these are package managers for macos
+if $is_mac; then
+  # first add mac-port directories to front if exists
+  # do this before brew, so brew will add in front of this.
+  path_prepend "/opt/local/bin"
+  path_prepend "/opt/local/sbin"
+
+  # then add "/opt/homebrew/bin" and "/opt/homebrew/sbin" to front of path
+  # this is intended to be added before macport paths
+  if [ -x /opt/homebrew/bin/brew ]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  fi
+fi

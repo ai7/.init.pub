@@ -1,0 +1,101 @@
+# Zsh aliases
+
+# custom alias2() function should be defined in either zsh or bash prior,
+# this defines an alias only if the target exists on the system.
+
+# --- essential commands ---
+
+if ! $is_mac; then
+  alias ls='ls -CFh --color=auto'
+  alias ps='\ps xufw'
+  alias ps-all='\ps -auxefw'
+  alias df='df -Th'
+else
+  alias ls='ls -CFh -GO'
+  alias ps='ps -o "user pid ppid pcpu pmem vsz rss time etime command"'
+  alias ps-all='ps -e'
+  alias df='df -h'
+fi
+
+# old habit DOS commands
+alias dir='ls -l'  # also in /bin/dir or /usr/bin/dir
+alias cls='clear'
+alias del='rm'
+alias md='mkdir'
+alias rd='rmdir'
+alias list='less'
+alias copy='cp'
+alias ren='mv'
+alias move='mv'
+
+# file override protection
+alias cp='cp -ip'
+alias rm='rm -i'
+alias mv='mv -i'
+
+# more command overrides
+alias grep='grep -inE --color=always'
+alias less='less -IMSR -#8'
+alias diff='diff -ub'
+alias which='which -a'
+alias scp='scp -p'
+
+# additional aliases
+alias hs='history 1 | \grep -iE --color=always'
+alias path-print='print -l $path'
+
+
+# --- rsync commands ---
+
+# rsync commands, useful for copying over large directories, or comparing
+# directories.
+
+# use rsync for backup
+#   src  : copy src as a directory to target [src -> target/src]
+#   src/ : copy src/* (contents) to target [src/* -> target/*]
+#
+# by default, rsync only copies A to B, it will NOT remove content
+# in B that are not in A. This is important, and desirable.
+#
+# -a: archive, same as -rlptgoD (no preserve hardlinks)
+#     -r: recurse into directories
+#     -l: copy symlinks as symlinks
+#     -p: preserve permissions
+#     -t: preserve times
+#     -g: preserve group
+#     -o: preserve owner
+#     -D: preserve device/special files
+# -v: increase verbosity
+# -x: don't cross filesystem boundaries
+# -P: same as --partial --progress
+#     --partial: keep partially transferred files
+#     --progress: show progress during transfer
+# -S: efficiently handles sparse files during transfer
+# -h: output numbers in a human-readable format
+#
+# -n: show what would have been transferred
+# -c: skip based on checksum, not mod-time & size
+# -i: output a change-summary for all updates
+#     f - file, d - directory, L - symlink, D - device, S - special file
+#     c: checksum differ
+#     s: size different
+#     t: modification time is different
+#     p: permissions are different
+#     o: owner is different
+#     g: group is different
+alias rsync='rsync -avh -S --stats'
+
+# backup A to B (not mirror, will not delete files in B)
+alias rsync-backup='rsync -xP'
+
+# compare A to B (what is in A but is not in B)
+alias rsync-diff='rsync-backup -ni'
+
+# compare A and B (what is in A that is not in B, and vice versa)
+alias rsync-diff-mirror='rsync-diff --delete'
+
+# verify A against B via checksum
+alias rsync-verify='rsync-diff -c'
+
+# run rsync daemon with standard settings
+alias rsync-server='\rsync --daemon'
