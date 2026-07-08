@@ -144,35 +144,14 @@ zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
 
 # ----- prompt stuff
 
+# add zsh dir to fpath so zsh lazy loading can find functions
+fpath+=(~/.init.pub/zsh)
 autoload -Uz promptinit && promptinit
 
-# Replicates your MYPSDIR_AWK logic
-get_fancy_dir() {
-  # Get path with ~ for home
-  local p="${PWD/#$HOME/~}"
-  # Split into an array
-  local parts=("${(s:/:)p}")
-
-  # Your specific condition: length > 16 AND more than 4 parts
-  if [[ ${#p} -gt 16 && ${#parts} -gt 4 ]]; then
-    # Replicates: print $1,$2,".." NF-4 "..",$(NF-1),$NF
-    # Note: parts[1] is the first element in Zsh (1-based indexing)
-    echo "${parts[1]}/${parts[2]}/..$((${#parts}-4))../${parts[-2]}/${parts[-1]}"
-  else
-    echo "$p"
-  fi
-}
-
-# set a prompt similar to my bash version for now
-# %(?.success.failure): ternary expression
-# %F{10}: Bright Green.
-# %F{9}: Bright Red.
-# %?: exit status
-# %l: tty
-# %L: shell level
-# %h: history number
-setopt PROMPT_SUBST
-PROMPT='[%F{yellow}%B%h%b%f %(?.%F{10}.%F{9})%?%f %l/%L %B%n@%m%b $(get_fancy_dir)]%# '
+# use this as a good default zsh prompt.
+# it is a 3 line prompt with nice set of information
+# a custom prompt with smart-truncated path is available in 'prompt ray'
+prompt clint
 
 # ----- remaining customizations -----
 
