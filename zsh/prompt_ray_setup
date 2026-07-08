@@ -37,10 +37,15 @@ prompt_ray_setup() {
   # %l: tty
   # %L: shell level
   # %h: history number
-  setopt PROMPT_SUBST
+  #
+  # tell promptinit to keep these options active for this theme
+  prompt_opts=(cr subst percent)
   PROMPT='[%F{yellow}%B%h%b%f %(?.%F{10}.%F{9})%?%f %l/%L %B%n@%m%b $(fancy_prompt_dir)]%# '
 }
 
 prompt_ray_cleanup() {
   unfunction fancy_prompt_dir 2>/dev/null
 }
+
+# required, loads the definitions
+prompt_ray_setup "$@"
