@@ -139,7 +139,7 @@ if $is_mac; then
    # export CLICOLOR=1
    export LSCOLORS=BxDxFxdxCxdxdxBxBxBxBx
 else
-   eval `dircolors ~/.init/bash/dir_colors`
+   eval `dircolors ~/.init.pub/zsh/dir_colors`
 fi
 
 # ----- case insensitive completion

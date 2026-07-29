@@ -1,0 +1,193 @@
+# Configuration file for the color ls utility - modified for gray backgrounds
+# Synchronized with coreutils 8.5 dircolors
+#
+# Raymond Chi <raymondc@cal.berkeley.edu>
+# last updated 2015-08-19
+#
+# This file goes in the /etc directory, and must be world readable.
+# You can copy this file to .dir_colors in your $HOME directory to override
+# the system defaults.
+
+# COLOR needs one of these arguments: 'tty' colorizes output to ttys, but not
+# pipes. 'all' adds color characters to all output. 'none' shuts colorization
+# off.
+COLOR tty
+
+# Extra command line options for ls go here.
+# Basically these ones are:
+#  -F = show '/' for dirs, '*' for executables, etc.
+#  -T 0 = don't trust tab spacing when formatting ls output.
+OPTIONS -F -T 0
+
+# Below, there should be one TERM entry for each termtype that is colorizable
+TERM linux
+TERM console
+TERM con132x25
+TERM con132x30
+TERM con132x43
+TERM con132x60
+TERM con80x25
+TERM con80x28
+TERM con80x30
+TERM con80x43
+TERM con80x50
+TERM con80x60
+TERM cons25
+TERM xterm
+TERM xterm-16color
+TERM xterm-88color
+TERM xterm-256color
+TERM rxvt
+TERM rxvt-256color
+TERM rxvt-unicode
+TERM rxvt-unicode256
+TERM xterm-color
+TERM color-xterm
+TERM vt100
+TERM dtterm
+TERM color_xterm
+TERM msys
+TERM screen
+TERM screen-256color
+TERM tmux
+TERM tmux-256color
+
+# EIGHTBIT, followed by '1' for on, '0' for off. (8-bit output)
+EIGHTBIT 1
+
+# Below are the color init strings for the basic file types. A color init
+# string consists of one or more of the following numeric codes:
+# Attribute codes:
+# 00=none 01=bold 04=underscore 05=blink 07=reverse 08=concealed
+# Text color codes:
+# 30=black 31=red 32=green 33=yellow 34=blue 35=magenta 36=cyan 37=white
+# Background color codes:
+# 40=black 41=red 42=green 43=yellow 44=blue 45=magenta 46=cyan 47=white
+
+#NORMAL 00	# no color code at all
+#FILE 00	# normal file, use no color at all
+#RESET 0
+DIR 01;31 	# directory (bright red)
+LINK 01;33 	# symbolic link (bright yellow)
+#MULTIHARDLINK 00 # regular file with more than one link
+FIFO 40;33	# pipe
+SOCK 01;35	# socket
+DOOR 00;35	# door
+BLK 40;33;01	# block device driver
+CHR 40;33;01 	# character device driver
+ORPHAN 01;37;41  # orphaned syminks
+MISSING 01;37;41 # ... and the files they point to
+
+SETUID 37;41	# file that is setuid (u+s)
+SETGID 30;43	# file that is setgid (g+s)
+#CAPABILITY 30;41	# file with capability
+STICKY_OTHER_WRITABLE 30;42 # dir that is sticky and other-writable (+t,o+w)
+OTHER_WRITABLE 34;42 # dir that is other-writable (o+w) and not sticky
+STICKY 37;44	# dir with the sticky bit set (+t) and not other-writable
+
+
+# This is for files with execute permission:
+EXEC 01;32
+
+# List any file extensions like '.gz' or '.tar' that you would like ls
+# to colorize below. Put the extension, a space, and the color init string.
+# (and any comments you want to add after a '#')
+
+# executables (bright green)
+.cmd 01;32
+.exe 01;32
+.com 01;32
+.btm 01;32
+.bat 01;32
+.sh  01;32
+.csh 01;32
+
+# archives or compressed (bright cyan)
+.tar 01;36
+.tgz 01;36
+.arj 01;36
+.taz 01;36
+.lzh 01;36
+.lzma 01;36
+.tlz 01;36
+.txz 01;36
+.zip 01;36
+.z   01;36
+.Z   01;36
+.dz  01;36
+.gz  01;36
+.lz  01;36
+.xz  01;36
+.bz2 01;36
+.tbz 01;36
+.tbz2 01;36
+.bz  01;36
+.tz  01;36
+.deb 01;36
+.rpm 01;36
+.jar 01;36
+.rar 01;36
+.ace 01;36
+.zoo 01;36
+.cpio 01;36
+.7z  01;36
+.rz  01;36
+
+# image formats (green)
+.jpg 00;32
+.jpeg 00;32
+.gif 00;32
+.bmp 00;32
+.pbm 00;32
+.pgm 00;32
+.ppm 00;32
+.tga 00;32
+.xbm 00;32
+.xpm 00;32
+.tif 00;32
+.tiff 00;32
+.png 00;32
+.svg 00;32
+.svgz 00;32
+.mng 00;32
+.pcx 00;32
+.mov 00;32
+.mpg 00;32
+.mpeg 00;32
+.m2v 00;32
+.mkv 00;32
+.ogm 00;32
+.mp4 00;32
+.m4v 00;32
+.mp4v 00;32
+.vob 00;32
+.qt  00;32
+.nuv 00;32
+.wmv 00;32
+.asf 00;32
+.rm  00;32
+.rmvb 00;32
+.flc 00;32
+.avi 00;32
+.fli 00;32
+.flv 00;32
+.gl 00;32
+.dl 00;32
+.xcf 00;32
+.xwd 00;32
+.yuv 00;32
+.cgm 00;32
+.emf 00;32
+
+.txt  01;37 # text files (bright white)
+.ini  01;37
+.log  01;37
+.json 01;37
+.h    01;37 # source files
+.c    01;37
+.cc   01;37
+.cpp  01;37
+.C    01;37
+.java 01;37
+.py   01;37
+.js   01;37
