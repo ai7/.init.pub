@@ -7,6 +7,13 @@
 
 # ----- history related configuration -----
 
+# when using SHARE_HISTORY, up arrow in session don't recall their immediate
+# previous command, but previous last command across all sessions, which is
+# slightly counter intuitive. So not using it, and instead use
+# APPEND_HISTORY with HIST_SAVE_NO_DUPS to ensure the history file itself
+# contains the data without duplicates, while each session retains its own
+# history, seeded from history file when started.
+
 # setopt SHARE_HISTORY           # shares history across all open sessions in realtime
 setopt APPEND_HISTORY          # Append to HISTFILE on exit (don't overwrite)
 setopt HIST_IGNORE_ALL_DUPS    # similar to bash erasedups
@@ -14,7 +21,7 @@ setopt HIST_IGNORE_SPACE       # don't save cmd begin with space
 setopt HIST_REDUCE_BLANKS      # removes extra spaces from cmd before saving
 setopt HIST_EXPIRE_DUPS_FIRST  # delete dups first on history limit reach
 setopt HIST_SAVE_NO_DUPS       # don't write duplicate entries to history file
-setopt HIST_VERIFY
+setopt HIST_VERIFY             # show expanded history command before executing
 
 export HISTFILE=~/.zsh_history # ensure history file is always created
 export HISTSIZE=16384
@@ -152,6 +159,7 @@ autoload -Uz promptinit && promptinit
 # use this as a good default zsh prompt.
 # it is a 3 line prompt with nice set of information
 # a custom prompt with smart-truncated path is available in 'prompt ray'
+# use 'prompt -l' to list available prompts
 prompt clint
 
 # ----- remaining customizations -----
@@ -185,6 +193,7 @@ if $is_mac; then
   path_prepend "/opt/local/sbin"
 
   # add homebrew to front of path (before macport paths)
+  # HOMEBREW_NO_BOTTLE_SOURCE_FALLBACK is now the default since v3.1.0
   if [ -x /opt/homebrew/bin/brew ]; then  # Apple Silicon
     eval "$(/opt/homebrew/bin/brew shellenv)"
   elif [ -x /usr/local/bin/brew ]; then   # Intel

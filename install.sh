@@ -34,6 +34,11 @@ if backup_if_needed ".zshrc"; then
   ln -s "${INITDIR}/zsh/zshrc" ".zshrc"
 fi
 
+if backup_if_needed ".tmux.conf"; then
+  echo "Linking .tmux.conf -> ${INITDIR}/tmux/tmux.conf"
+  ln -s "${INITDIR}/tmux/tmux.conf" ".tmux.conf"
+fi
+
 popd
 
 # map home/end to beg/end of line on mac
