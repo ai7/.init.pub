@@ -12,7 +12,10 @@ if [[ "$OSTYPE" == darwin* ]]; then
     uptime_seconds=$((now - boot_time))
     # get the load average using
     load_avg=$(uptime | awk '{print $(NF-2), $(NF-1), $NF}' | tr -d ',')
+    # number of cpu cores
     cores=$(sysctl -n hw.logicalcpu)
+    # macOS: hw.memsize returns bytes -> convert to GB (rounded)
+    ram_gb=$(sysctl -n hw.memsize | awk '{printf "%d", ($1 / 1024 / 1024 / 1024) + 0.5}')
 else
     # Linux (and others): Read directly from /proc/uptime
     uptime_seconds=$(awk '{print int($1)}' /proc/uptime)
@@ -20,6 +23,8 @@ else
     load_avg=$(cut -d " " -f 1-3 /proc/loadavg)
     # number of cpu cores
     cores=$(nproc)
+    # Linux: MemTotal returns kB -> convert to GB (rounded)
+    ram_gb=$(awk '/MemTotal/ {printf "%d", ($2 / 1024 / 1024) + 0.5}' /proc/meminfo)
 fi
 
 d=$((uptime_seconds / 86400))
@@ -27,4 +32,4 @@ h=$((uptime_seconds % 86400 / 3600))
 m=$((uptime_seconds % 3600 / 60))
 s=$((uptime_seconds % 60))
 
-printf "%dd %02d:%02d:%02d (%s %dc)\n" "$d" "$h" "$m" "$s" "$load_avg" "$cores"
+printf "%dd %02d:%02d:%02d (%s %dc/%sg)" "$d" "$h" "$m" "$s" "$load_avg" "$cores" "$ram_gb"
