@@ -1,0 +1,24 @@
+# Editor backup files
+*~
+
+# macOS, ._* are AppleDouble files (show up on network/USB volumes)
+.DS_Store
+._* 
+
+# Python bytecode cache
+__pycache__/
+*.py[cod]
+
+# Python virtual environments
+.venv/
+venv/
+
+# JetBrains IDEs
+.idea/
+*.iml
+
+# Claude Code - personal/local files
+# There are other files in .claude/ that are meant to be committed,
+# so only match what should be ignored here
+**/.claude/settings.local.json
+**/.claude/memory.md
