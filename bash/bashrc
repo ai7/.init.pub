@@ -1,0 +1,85 @@
+# bash setting that should work everywhere.
+
+# If not running interactively, don't do anything
+[[ $- == *i* ]] || return
+
+# ----- load history settings -----
+
+. ~/.init.pub/bash/bash_history
+
+# check the window size after each command and, if necessary, update
+# the values of LINES and COLUMNS.
+shopt -s checkwinsize
+
+# ---------- prompt ----------
+
+# export PS1='[$? \u@\h \w]$ '
+export PS1='[\[\033[1;32m\]$?\[\033[0;0m\] \[\033[0;1m\]\u@\h\[\033[0;0m\] \w]$ '
+export PAGER='less -IMSR'
+
+# ---------- aliases ----------
+
+alias ls='ls -CFh --color=auto'
+alias df='df -Th'
+
+alias dir='ls -l'
+alias cls='clear'
+alias del='rm'
+alias md='mkdir'
+alias rd='rmdir'
+alias cp='cp -ip'
+alias rm='rm -i'
+alias mv='mv -i'
+
+alias grep='grep -inE --color=always'
+alias less='less -IMSR -#8'
+alias list='less'
+alias diff='diff -ub'
+alias which='which -a'
+alias scp='scp -p'
+
+alias tail='less -IMSR -#8 +F'
+alias tgz='tar -czvf'
+alias untgz='tar -xzvf'
+alias hs='history | \grep -iE --color=always'
+
+# useful rsync commands
+#   src  : copy src as a directory to target [src -> target/src]
+#   src/ : copy src/* (contents) to target [src/* -> target/*]
+alias rsync='rsync -avh -S --stats'
+alias rsync-backup='rsync -xP'
+alias rsync-diff='rsync-backup -ni'
+alias rsync-diff-mirror='rsync-diff --delete'
+alias rsync-verify='rsync-diff -c'
+
+alias ff='find . -iname'
+alias path-print='echo "${PATH//:/$'"'"'\n'"'"'}"'
+
+# ----- key bindings -----
+
+bind '"\e[A": history-search-backward'
+bind '"\e[B": history-search-forward'
+bind '"\e[1~": beginning-of-line'
+bind '"\e[4~": end-of-line'
+
+bind '"\eOA": history-search-backward'
+bind '"\eOB": history-search-forward'
+
+# ----- useful bash functions -----
+
+# check if $1 is in $PATH
+function is_in_path {
+  if [[ ":$PATH:" == *":$1:"* ]]; then
+    return 0  # true
+  else
+    return 1  # false
+  fi
+}
+
+# add $1 to end of path, unless already in path
+function path_add {
+  # if non empty, exists, and not already in path
+  if [[ -n $1 ]] && [[ -d $1 ]] && ! is_in_path "$1"; then
+    PATH="$PATH:$1"
+  fi
+}

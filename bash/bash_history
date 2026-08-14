@@ -1,0 +1,126 @@
+# -*- Shell-script -*-
+#
+# setting up bash command history stuff.
+
+# ----- history stuff -----
+
+# to restore history from new .bash_history file
+# history -c / history -r
+# make sure only one window is open
+
+# export HISTTIMEFORMAT='%F %T '            # YYYY-MM-DD HH:MM:SS
+export HISTSIZE=16384                     # 16k entries, big history
+export HISTFILESIZE=$(( HISTSIZE * 4 ))   # history file 4 times in-memory
+export HISTCONTROL=ignoreboth:erasedups   # no duplicate entries
+shopt -s histappend                       # append history file
+
+# do not save these commands to history
+# things skipped here cannot be recalled by up-arrow!
+# keep this in mind when adding stuff to this list.
+#   &: skip command if it's same as previous one
+#      not needed since `ignoreboth` includes `ignoredups`.
+# export HISTIGNORE='history:history *:ls:dir:cd:cd ..:cls:clear:[bf]g:exit:pwd:set:export:hs:hs *'
+_hist_ignore_list=(
+   'history'
+   'history *'   # ignore history with arguments
+   'ls'
+   'dir'
+   'cd'
+   'cd ..'
+   'cls'
+   'clear'
+   '[bf]g'       # ignore background/foreground jobs
+   'exit'
+   'pwd'
+   'set'
+   'export'
+   'env'
+   'df'
+   'hs'
+   'hs *'        # ignore history search commands
+)
+export HISTIGNORE=$(printf ":%s" "${_hist_ignore_list[@]}")
+export HISTIGNORE="${HISTIGNORE:1}" # Remove the leading colon
+unset _hist_ignore_list
+
+
+# remove duplicates while preserving input order
+function dedup {
+   awk '! x[$0]++' $@
+}
+
+# this function removes $HISTIGNORE commands from input
+# use Bash pattern replacement rather than 2x sed (2026)
+# was previously using sed as follow:
+#   local IGNORE_PAT=`echo "$HISTIGNORE" | sed s/\:/\|/g | sed s/\*/\.\*/g`
+function remove_histignore {
+   if [ -n "$HISTIGNORE" ]; then
+      # order matters: replace . then * then :
+      # as otherwise the dot from '.*' will be replaced again.
+      #   . -> \.
+      #   * -> .*
+      #   : -> |
+      local IGNORE_PAT="${HISTIGNORE//./\\.}"
+      IGNORE_PAT="${IGNORE_PAT//\*/.*}"
+      IGNORE_PAT="${IGNORE_PAT//:/|}"
+      # debug log needs to end with >&2 so it is sent to STDERR
+      # echo "using pattern: $IGNORE_PAT" >&2
+
+      # negated grep removes matches
+      # skip alias since we have grep output line number!!
+      \grep -Evx "$IGNORE_PAT" $@
+   else
+      cat "$@"
+   fi
+}
+
+# clean up the history file by remove duplicates
+# and commands matching $HISTIGNORE entries
+function history_cleanup {
+   local HISTFILE_SRC="${HISTFILE:-$HOME/.bash_history}"
+   if [ -f $HISTFILE_SRC ]; then
+      # capture some statistics to use in prompt
+      local BEFORE_COUNT=$(wc -l < "$HISTFILE_SRC" | awk '{print $1}')
+      # Get the current limit (default to 500 if unset)
+      local LIMIT="${HISTSIZE:-500}"
+      # Calculate utilization percentage
+      local UTIL_PERCENT=$(awk -v c="$BEFORE_COUNT" -v l="$LIMIT" 'BEGIN { if (l>0) printf "%.2f", (c/l)*100; else print "0" }')
+
+      # prompt to confirm the operation
+      printf "Current history file (%s) has %'d entries (max: %'d, %s%%).\n" \
+             "$HISTFILE_SRC" "$BEFORE_COUNT" "$LIMIT" "$UTIL_PERCENT"
+      read -p "Do you want to proceed with cleanup? (y/N): " confirm
+      [[ "$confirm" =~ ^[Yy]$ ]] || { echo "Cleanup cancelled."; return 1; }
+
+      # sync current session to file before cleaning
+      echo "  Saving current session to file ..."
+      history -a
+
+      # backup current file
+      echo "  Backing up current history file ..."
+      \cp $HISTFILE_SRC "$HISTFILE_SRC.$(date +%Y%m%d_%H%M%S)"
+
+      # clean: dedupe -> filter -> temp file
+      echo "  Cleaning up history [dedupe, filter] ..."
+      local HISTFILE_DST=/tmp/.$USER.bash_history.clean
+      dedup $HISTFILE_SRC | remove_histignore >| $HISTFILE_DST
+
+      # move temp file back to source
+      echo "  Cleaning up temp file ..."
+      \mv $HISTFILE_DST $HISTFILE_SRC
+      chmod go-r $HISTFILE_SRC
+
+      # reload into current session (clear and then read)
+      echo "  Reloading history into session ..."
+      history -c
+      history -r
+
+      # print a summary
+      local AFTER_COUNT=$(wc -l < "$HISTFILE_SRC" | awk '{print $1}')
+      local REDUCED=$(( BEFORE_COUNT - AFTER_COUNT ))
+      # Use awk to handle the decimal math for percentage
+      local PERCENT=$(awk -v b="$BEFORE_COUNT" -v a="$AFTER_COUNT" 'BEGIN { if (b>0) printf "%.2f", ((b-a)/b)*100; else print "0" }')
+      printf "%s entries: %'d -> %'d (Reduced by: %'d lines, %s%%)\n" \
+             "$HISTFILE_SRC" "$BEFORE_COUNT" "$AFTER_COUNT" "$REDUCED" "$PERCENT"
+   fi
+}
