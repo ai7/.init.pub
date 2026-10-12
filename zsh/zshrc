@@ -63,6 +63,8 @@ setopt PUSHD_IGNORE_DUPS
 # up/down arrow searches through history
 bindkey '^[[A' history-beginning-search-backward  # up-arrow
 bindkey '^[[B' history-beginning-search-forward   # down-arrow
+bindkey '^[OA' history-beginning-search-backward
+bindkey '^[OB' history-beginning-search-forward
 
 bindkey '^[[3~' delete-char        # Delete
 bindkey '^[[H'  beginning-of-line  # Home (xterm)
@@ -76,6 +78,16 @@ bindkey '^[[4~' end-of-line        # End (vt220/linux)
 [[ -v MC_SID ]]        && return  # midnight commander subshell
 [[ -v INSIDE_EMACS ]]  && return  # emacs shell modes
 [[ -v VIM ]]           && return  # vim/nvim :shell
+[[ "$TERM_PROGRAM" == "vscode" ]] && return  # vs-code cline shell
+
+# ----- reset terminal key modes -----
+
+# a tmux client killed by a dropped ssh connection can leave iTerm2 with
+# modifyOtherKeys and cursor/keypad application mode still on, which breaks
+# ctrl-u, ctrl-d, etc. outside tmux. reset them on login.
+if [[ -z $TMUX && -t 1 ]]; then
+  printf '\e[>4;0m\e[?1l\e>'
+fi
 
 # ----- os detect -----
 
@@ -115,6 +127,11 @@ alias2() {
   if (( $+commands[$2] )) || [[ -x "$2" ]]; then
     alias "$1"="$2"
   fi
+}
+
+# remove duplicates while preserving input order
+dedup() {
+   awk '! x[$0]++' "$@"
 }
 
 # ----- initial path setup -----
